@@ -10,26 +10,10 @@
 -author("kbieniasz").
 
 
--import(pollution,
-  [createMonitor/0,
-  addStation/3,
-  addValue/5,
-  addValueByName/5,
-  test/0,
-  removeValue/4,
-  removeValueByName/4,
-  getOneValue/4,
-  getOneValueByName/4,
-  getStationMean/3,
-  getStationMeanByName/3,
-  getDailyMean/3,
-  getStationMeanByNameWithDate/4,
-  getMinumumPollutionStation/2,
-  getStationMinimumType/3, complexTest/0, dailyMeanTest/1, testMyFuntion/1, stationMeanTest/1, stationMeanTestFail/1
-]).
 
 %% API
--export([start/0, stop/0, get_response/0, flush_function/0]).
+-export([start/0, stop/0, get_response/0, flush_function/0,
+  addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getMinumumPollutionStation/1]).
 
 init () ->
   StartingMonitor = createMonitor(),
@@ -59,6 +43,14 @@ flush_function() ->
   after 0 -> ok
   end.
 
+addStation(Name, Coordinates) -> server ! {self(), addStation, Name, Coordinates}.
+addValue ( ID, Date, Type, Value) -> server ! {self(), addValue,  ID, Date, Type, Value}.
+removeValue( ID,Date, Type) -> server ! {self(), removeValue,  ID,Date, Type}.
+getOneValue (ID, Date, Type) -> server ! {self(),  getOneValue, ID, Date, Type}.
+getStationMean(ID, Type)  -> server ! {self(), getStationMean, ID, Type}.
+getDailyMean (Type, DayDate) -> server ! {self(), getDailyMean, Type, DayDate}.
+getMinumumPollutionStation (Type) -> server ! {self(), getMinumumPollutionStation, Type}.
+
 loop(Monitor) ->
   receive
     {Pid, addStation, Name, Coordinates} ->
@@ -76,7 +68,7 @@ loop(Monitor) ->
       Pid ! {ok, NewMonitor},
       loop(NewMonitor);
 
-    {Pid, getValue, ID, Date, Type} ->
+    {Pid, getOneValue, ID, Date, Type} ->
       Pid ! {ok, getOneValue(Monitor, ID, Date, Type)},
       loop(Monitor);
 
