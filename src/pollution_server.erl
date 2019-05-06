@@ -16,7 +16,7 @@
   addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getMinumumPollutionStation/1]).
 
 init () ->
-  StartingMonitor = createMonitor(),
+  StartingMonitor = pollution:createMonitor(),
   io:format("Inicjalizacja serwera\n"),
   loop(StartingMonitor).
 
@@ -26,7 +26,7 @@ start() ->
   io:format("Start serwara z numerem PID: ~w \n", [Pid]).
 
 stop() ->
-  global:send(server,stop).
+  server ! stop .
 
 
 get_response() ->
@@ -34,7 +34,7 @@ get_response() ->
     {ok,ReturnValue} -> ReturnValue;
     _ -> io:format("Wystąpił błąd\n"),
       -1
-  after 100 -> -1
+  after 100 -> -2
   end.
 
 flush_function() ->
@@ -54,38 +54,38 @@ getMinumumPollutionStation (Type) -> server ! {self(), getMinumumPollutionStatio
 loop(Monitor) ->
   receive
     {Pid, addStation, Name, Coordinates} ->
-      NewMonitor = addStation(Monitor, Name, Coordinates),
+      NewMonitor = pollution:addStation(Monitor, Name, Coordinates),
       Pid ! {ok, NewMonitor},
       loop(NewMonitor);
 
     {Pid, addValue, ID, Date, Type, Value} ->
-      NewMonitor = addValue(Monitor,ID, Date, Type, Value),
+      NewMonitor = pollution:addValue(Monitor,ID, Date, Type, Value),
       Pid ! {ok, NewMonitor},
       loop(NewMonitor);
 
     {Pid, removeValue,  ID,Date, Type} ->
-      NewMonitor = removeValue(Monitor, ID,Date, Type),
+      NewMonitor = pollution:removeValue(Monitor, ID,Date, Type),
       Pid ! {ok, NewMonitor},
       loop(NewMonitor);
 
     {Pid, getOneValue, ID, Date, Type} ->
-      Pid ! {ok, getOneValue(Monitor, ID, Date, Type)},
+      Pid ! {ok, pollution:getOneValue(Monitor, ID, Date, Type)},
       loop(Monitor);
 
     {Pid, getStationMean, ID, Type} ->
-      Pid ! {ok, getStationMean(Monitor,ID,Type)},
+      Pid ! {ok,pollution: getStationMean(Monitor,ID,Type)},
       loop(Monitor);
 
     {Pid, getDailyMean, Type, DayDate} ->
-      Pid ! {ok, getDailyMean(Monitor,Type,DayDate)},
+      Pid ! {ok, pollution:getDailyMean(Monitor,Type,DayDate)},
       loop(Monitor);
 
-    {Pid, getMinumumPollutionStation, Monitor, Type} ->
-      Pid ! {ok, getMinumumPollutionStation(Monitor,Type)},
+    {Pid, getMinumumPollutionStation, Type} ->
+      Pid ! {ok,pollution: getMinumumPollutionStation(Monitor,Type)},
       loop(Monitor);
 
     stop ->
-      io:format("Zatrzymanie serwera"), ok;
+      io:format("Zatrzymanie serwera "), ok;
 
     _ ->
       io:format("Nieznany rodzaj komunikatu\n"), loop(Monitor)
