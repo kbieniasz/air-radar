@@ -13,7 +13,8 @@
 
 %% API
 -export([start/0, stop/0, get_response/0, flush_function/0,
-  addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getMinumumPollutionStation/1]).
+  addStation/2, addValue/4, removeValue/3, getOneValue/3, getStationMean/2, getDailyMean/2, getMinumumPollutionStation/1, crash/0]).
+-compile(export_all).
 
 init () ->
   StartingMonitor = pollution:createMonitor(),
@@ -27,6 +28,9 @@ start() ->
 
 stop() ->
   server ! stop .
+
+crash() ->
+  server ! crash.
 
 
 get_response() ->
@@ -85,7 +89,11 @@ loop(Monitor) ->
       loop(Monitor);
 
     stop ->
-      io:format("Zatrzymanie serwera "), ok;
+      io:format("Zatrzymanie serwera ~n"), ok;
+
+    crash ->
+      io:format("Blad arytmetyczny ~n"),
+      1/0;
 
     _ ->
       io:format("Nieznany rodzaj komunikatu\n"), loop(Monitor)
